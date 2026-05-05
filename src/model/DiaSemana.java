@@ -1,5 +1,9 @@
 package model;
 
-public class DiaSemana {
-    
+public enum DiaSemana {
+    LUNES,
+    MARTES,
+    MIERCOLES,
+    JUEVES,
+    VIERNES
 }

@@ -1,5 +1,7 @@
 package model;
 
-public class TipoSeccion {
-    
+public enum TipoSeccion {
+    GENERAL,
+    VIP,
+    ELECTRICO
 }
