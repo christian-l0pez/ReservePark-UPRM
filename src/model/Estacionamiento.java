@@ -281,3 +281,241 @@ public class Estacionamiento {
         return reservacionesCreadas;
     }
 
+    private void guardarReservacionEnMapas(Reservacion reservacion) {
+        String tablilla = reservacion.getAuto().getTablilla();
+        String numEstudiante = reservacion.getEstudiante().getNumEstudiante();
+        if (!mapaReservacionesPorTablilla.containsKey(tablilla)) {
+            mapaReservacionesPorTablilla.put(tablilla, new ArrayList<>());
+        }
+        mapaReservacionesPorTablilla.get(tablilla).add(reservacion);
+        if (!mapaReservacionesPorEstudiante.containsKey(numEstudiante)) {
+            mapaReservacionesPorEstudiante.put(numEstudiante, new ArrayList<>());
+        }
+        mapaReservacionesPorEstudiante.get(numEstudiante).add(reservacion);
+        mapaReservacionesPorId.put(reservacion.getIdReservacion(), reservacion);
+    }
+    private void quitarReservacionDeMapas(Reservacion reservacion) {
+        String tablilla = reservacion.getAuto().getTablilla();
+        String numEstudiante = reservacion.getEstudiante().getNumEstudiante();
+        if (mapaReservacionesPorTablilla.containsKey(tablilla)) {
+            mapaReservacionesPorTablilla.get(tablilla).remove(reservacion);
+        }
+        if (mapaReservacionesPorEstudiante.containsKey(numEstudiante)) {
+            mapaReservacionesPorEstudiante.get(numEstudiante).remove(reservacion);
+        }
+        mapaReservacionesPorId.remove(reservacion.getIdReservacion());
+    }
+
+    public void cancelarReservacion(String idReservacion)
+            throws ReservNoEncontradaException {
+        Reservacion reservacionABuscar = mapaReservacionesPorId.get(idReservacion);
+        if (reservacionABuscar == null) {
+            throw new ReservNoEncontradaException("No se encontro la reservacion indicada.");
+        }
+        if (!reservacionABuscar.isActivo()) {
+            throw new ReservNoEncontradaException("La reservacion ya esta cancelada.");
+        }
+        reservacionABuscar.cancelar();
+        Transaccion transaccionCancelacion = new Transaccion(
+                IdGen.nuevoIdTransaccion(),
+                TipoTransaccion.CANCELACION,
+                reservacionABuscar,
+                0.00,
+                "Reservacion cancelada."
+        );
+        historialDeTransacciones.add(transaccionCancelacion);
+        Transaccion cargoPorCancelacion = new Transaccion(
+                IdGen.nuevoIdTransaccion(),
+                TipoTransaccion.CARGO_CANCELACION,
+                reservacionABuscar,
+                CalcCosto.calcularCostoCancelacion(),
+                "Cargo por cancelacion de reservacion."
+        );
+        historialDeTransacciones.add(cargoPorCancelacion);
+        pilaDeAcciones.push(new AccionProg(
+                AccionProg.Tipo.CANCELAR,
+                reservacionABuscar,
+                null,
+                reservacionABuscar.getCostoTotal()
+        ));
+        procesarListaEspera(reservacionABuscar.getEspacio().getSeccion());
+    }
+
+    public Reservacion cambiarEspacio(
+            String idReservacion,
+            int nuevoNumeroEspacio
+    ) throws ReservNoEncontradaException, NoDisponibleException {
+        Reservacion reservacion = mapaReservacionesPorId.get(idReservacion);
+        if (reservacion == null) {
+            throw new ReservNoEncontradaException("No se encontro la reservacion indicada.");
+        }
+        if (!reservacion.isActivo()) {
+            throw new ReservNoEncontradaException("No se puede cambiar una reservacion cancelada.");
+        }
+        Espacio espacioAnterior = reservacion.getEspacio();
+        Espacio espacioNuevo = buscarEspacioPorNumero(nuevoNumeroEspacio);
+        if (espacioNuevo == null) {
+            throw new NoDisponibleException("El nuevo espacio indicado no existe.");
+        }
+        boolean nuevoEspacioLibre = espacioNuevo.estaDisponible(
+                reservacion.getDia(),
+                reservacion.getHoraInicio(),
+                reservacion.getHoraFin()
+        );
+        if (!nuevoEspacioLibre) {
+            throw new NoDisponibleException("El nuevo espacio no esta disponible en ese horario.");
+        }
+        double costoAnteriorGuardado = reservacion.getCostoTotal();
+        espacioAnterior.removerReservacion(reservacion);
+        espacioNuevo.agregarReservacion(reservacion);
+        reservacion.cambiarEspacio(espacioNuevo);
+        double costoNuevo = CalcCosto.calcularCostoCambio(
+                espacioNuevo.getSeccion(),
+                reservacion.getHoraInicio(),
+                reservacion.getHoraFin(),
+                reservacion.getServicios()
+        );
+        reservacion.actualizarCostoTotal(costoNuevo);
+        Transaccion transaccionDeCambio = new Transaccion(
+                IdGen.nuevoIdTransaccion(),
+                TipoTransaccion.CAMBIO_ESPACIO,
+                reservacion,
+                costoNuevo,
+                "Cambio de espacio realizado. Cargo de cambio incluido."
+        );
+        historialDeTransacciones.add(transaccionDeCambio);
+        pilaDeAcciones.push(new AccionProg(
+                AccionProg.Tipo.CAMBIAR,
+                reservacion,
+                espacioAnterior,
+                costoAnteriorGuardado
+        ));
+        return reservacion;
+    }
+
+    public void agregarAListaEspera(Reservacion reservacion) {
+        TipoSeccion seccionDeLaReservacion = reservacion.getEspacio().getSeccion();
+        Queue<Reservacion> colaCorrecta = conseguirColaDeEsperaPorSeccion(seccionDeLaReservacion);
+        colaCorrecta.add(reservacion);
+    }
+    public Reservacion procesarListaEspera(TipoSeccion seccion) {
+        Queue<Reservacion> colaCorrecta = conseguirColaDeEsperaPorSeccion(seccion);
+        if (colaCorrecta.isEmpty()) {
+            return null;
+        }
+        Reservacion siguienteEnLaCola = colaCorrecta.poll();
+        return siguienteEnLaCola;
+    }
+    public ArrayList<Reservacion> buscarReservacionesPorTablilla(String tablilla) {
+        boolean existeLaTablilla = mapaReservacionesPorTablilla.containsKey(tablilla);
+        if (existeLaTablilla) {
+            return mapaReservacionesPorTablilla.get(tablilla);
+        }
+        return new ArrayList<>();
+    }
+    public ArrayList<Reservacion> buscarReservacionesPorEstudiante(String numEstudiante) {
+        boolean existeElEstudiante = mapaReservacionesPorEstudiante.containsKey(numEstudiante);
+        if (existeElEstudiante) {
+            return mapaReservacionesPorEstudiante.get(numEstudiante);
+        }
+        return new ArrayList<>();
+    }
+    public ArrayList<Reservacion> obtenerTodasLasReservaciones() {
+        ArrayList<Reservacion> todasLasReservaciones = new ArrayList<>();
+        for (Reservacion r : mapaReservacionesPorId.values()) {
+            todasLasReservaciones.add(r);
+        }
+        return todasLasReservaciones;
+    }
+    public ArrayList<Reservacion> obtenerReservacionesMayorDosHoras(DiaSemana dia) {
+        ArrayList<Reservacion> resultado = new ArrayList<>();
+        for (Reservacion r : mapaReservacionesPorId.values()) {
+            boolean esMismoDia = r.getDia() == dia;
+            boolean esMasDeDosHoras = r.esMayorDeDosHoras();
+            if (esMismoDia && esMasDeDosHoras) {
+                resultado.add(r);
+            }
+        }
+        return resultado;
+    }
+    public ArrayList<Reservacion> obtenerReservacionesPorRangoCosto(double minimo, double maximo) {
+        ArrayList<Reservacion> resultado = new ArrayList<>();
+        for (Reservacion r : mapaReservacionesPorId.values()) {
+            double costo = r.getCostoTotal();
+            if (costo >= minimo && costo <= maximo) {
+                resultado.add(r);
+            }
+        }
+        return resultado;
+    }
+
+    public ArrayList<Reservacion> obtenerReservacionesPorPeriodo(
+            DiaSemana dia,
+            int horaInicio,
+            int horaFin
+    ) {
+        ArrayList<Reservacion> resultado = new ArrayList<>();
+        for (Reservacion Sahur : mapaReservacionesPorId.values()) {
+            if (Sahur.getDia() == dia) {
+                boolean hayTraslape = horaInicio < Sahur.getHoraFin() && horaFin > Sahur.getHoraInicio();
+                if (hayTraslape == true) {
+                    resultado.add(Sahur);
+                }
+            }
+        }
+        return resultado;
+    }
+
+    public LinkedList<Transaccion> obtenerTransacciones() {
+        return historialDeTransacciones;
+    }
+
+    public void deshacerUltimaAccion() {
+        if (pilaDeAcciones.isEmpty()) {
+            System.out.println("No hay acciones para deshacer.");
+            return;
+        }
+
+        AccionProg ultimaAccion = pilaDeAcciones.pop();
+        Reservacion reservacionAfectada = ultimaAccion.getReservacion();
+        if (ultimaAccion.getTipo() == AccionProg.Tipo.RESERVAR) {
+            reservacionAfectada.cancelar();
+            reservacionAfectada.getEspacio().removerReservacion(reservacionAfectada);
+            quitarReservacionDeMapas(reservacionAfectada);
+            historialDeTransacciones.add(new Transaccion(
+                    IdGen.nuevoIdTransaccion(),
+                    TipoTransaccion.CANCELACION,
+                    reservacionAfectada,
+                    0.00,
+                    "Se deshizo una reservacion creada."
+            ));
+        } else if (ultimaAccion.getTipo() == AccionProg.Tipo.CANCELAR) {
+            reservacionAfectada.reactivar();
+            historialDeTransacciones.add(new Transaccion(
+                    IdGen.nuevoIdTransaccion(),
+                    TipoTransaccion.RESERVACION,
+                    reservacionAfectada,
+                    reservacionAfectada.getCostoTotal(),
+                    "Se deshizo una cancelacion."
+            ));
+
+
+
+            
+        } else if (ultimaAccion.getTipo() == AccionProg.Tipo.CAMBIAR) {
+            Espacio espacioActualAhora = reservacionAfectada.getEspacio();
+            Espacio espacioQueTeniaAntes = ultimaAccion.getEspacioAnterior();
+            espacioActualAhora.removerReservacion(reservacionAfectada);
+            espacioQueTeniaAntes.agregarReservacion(reservacionAfectada);
+            reservacionAfectada.cambiarEspacio(espacioQueTeniaAntes);
+            reservacionAfectada.actualizarCostoTotal(ultimaAccion.getCostoAnterior());
+            historialDeTransacciones.add(new Transaccion(
+                    IdGen.nuevoIdTransaccion(),
+                    TipoTransaccion.CAMBIO_ESPACIO,
+                    reservacionAfectada,
+                    ultimaAccion.getCostoAnterior(),
+                    "Se deshizo un cambio de espacio."
+            ));
+        }
+    }
+}
