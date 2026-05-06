@@ -1,64 +1,72 @@
 package model;
 import java.util.ArrayList;
 public class CalcCosto {
-    private TipoSeccion seccion;
-    private int horaInicial;
-    private int horaFinal;
-    private ArrayList<ServicioAdicional> servicios;
 
-    public static final double CANCELACION = 10.0;
-    public static final double CAMBIO = 6.00;
+    public static final double TARIFA_GENERAL = 2.00;
+    public static final double TARIFA_VIP = 4.00;
+    public static final double TARIFA_ELECTRICO = 8.00;
 
-    public CalcCosto(TipoSeccion seccion, int horaInicial, int horaFinal, ArrayList<ServicioAdicional> servicios){
-        this.seccion = seccion;
-        this.horaInicial = horaInicial;
-        this.horaFinal = horaFinal;
-        this.servicios = servicios;
-    }
+    public static final double COSTO_CANCELACION = 10.00;
+    public static final double COSTO_CAMBIO_ESPACIO = 6.00;
 
-    public TipoSeccion getSeccion(){
-        return seccion;
-    }
+    public static final double COSTO_AIRE_GOMAS = 1.00;
+    public static final double COSTO_FLUIDOS = 2.00;
+    public static final double COSTO_LAVADO_EXTERIOR = 50.00;
+    public static final double COSTO_LIQUIDO_FRENOS = 35.00;
+    public static final double COSTO_ACEITE_MOTOR = 40.00;
 
-    public int getHoraInicial(){
-        return horaInicial;
-    }
-    
-    public int getHoraFinal(){
-        return horaFinal;
-    }
-
-    public ArrayList<ServicioAdicional> getServicios(){
-        return servicios;
-    }
-
-    public double precio(){
-        switch(seccion){
-            case GENERAL: return 2.00;
-            case VIP: return 4.00;
-            case ELECTRICO: return 8.00;
-            default: return 0.0;
+    public static double obtenerTarifaPorHora(TipoSeccion seccion) {
+        if (seccion == TipoSeccion.GENERAL) {
+            return TARIFA_GENERAL;
+        } else if (seccion == TipoSeccion.VIP) {
+            return TARIFA_VIP;
+        } else if (seccion == TipoSeccion.ELECTRICO) {
+            return TARIFA_ELECTRICO;
+        } else {
+            return 0.00;
         }
     }
 
-    public double costoTotal(){
-        int horas = horaFinal - horaInicial;
-        double costo = horas * precio();
-        double extras = 0.0;
+    public static double calcularCostoBase(TipoSeccion seccion, int horaInicio, int horaFin) {
+        int horas = horaFin - horaInicio;
+        return horas * obtenerTarifaPorHora(seccion);
+    }
 
-        if(servicios != null){
-            for(ServicioAdicional s : servicios){
-                extras = extras + s.getCosto();
+    public static double calcularCostoServicios(ArrayList<ServicioAdicional> servicios) {
+        double total = 0.00;
+
+        if (servicios != null) {
+            for (ServicioAdicional servicio : servicios) {
+                total = total + servicio.getCosto();
             }
         }
-        return costo + extras;
+
+        return total;
     }
 
-    @Override
-    public String toString() {
-    return "CalcCosto: " + seccion +
-            "\nHorario: " + horaInicial + ":00 - " + horaFinal + ":00" +
-            String.format("\nPrecio por hora: $%.2f", precio()) +
-            String.format("\nCosto total: $%.2f", costoTotal());
-}
+    public static double calcularCostoTotal(
+            TipoSeccion seccion,
+            int horaInicio,
+            int horaFin,
+            ArrayList<ServicioAdicional> servicios
+    ) {
+        double costoBase = calcularCostoBase(seccion, horaInicio, horaFin);
+        double costoServicios = calcularCostoServicios(servicios);
+
+        return costoBase + costoServicios;
+    }
+
+    public static double calcularCostoCambio(
+            TipoSeccion nuevaSeccion,
+            int horaInicio,
+            int horaFin,
+            ArrayList<ServicioAdicional> servicios
+    ) {
+        return calcularCostoTotal(nuevaSeccion, horaInicio, horaFin, servicios)
+                + COSTO_CAMBIO_ESPACIO;
+    }
+
+    public static double calcularCostoCancelacion() {
+        return COSTO_CANCELACION;
+    }
 }
