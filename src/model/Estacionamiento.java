@@ -122,10 +122,7 @@ public class Estacionamiento {
             int horaInicio,
             int horaFin,
             int numeroEspacio,
-            ArrayList<ServicioAdicional> servicios,
-            int mes,
-            int diaMes,
-            int year
+            ArrayList<ServicioAdicional> servicios
     ) throws HorarioException, NoDisponibleException {
         ValidReserva.validarHorario(dia, horaInicio, horaFin);
         Espacio espacioElegido = buscarEspacioPorNumero(numeroEspacio);
@@ -380,6 +377,11 @@ public class Estacionamiento {
         Queue<Reservacion> colaCorrecta = conseguirColaDeEsperaPorSeccion(seccionDeLaReservacion);
         colaCorrecta.add(reservacion);
     }
+
+    public Queue<Reservacion> getColaEspera(TipoSeccion seccion){
+        return conseguirColaDeEsperaPorSeccion(seccion);
+    }
+
     public Reservacion procesarListaEspera(TipoSeccion seccion) {
         Queue<Reservacion> colaCorrecta = conseguirColaDeEsperaPorSeccion(seccion);
         if (colaCorrecta.isEmpty()) {
@@ -402,6 +404,10 @@ public class Estacionamiento {
         }
         return new ArrayList<>();
     }
+    public Reservacion buscarReservacionPorId(String idReservacion){
+        return mapaReservacionesPorId.get(idReservacion);
+    }
+    
     public ArrayList<Reservacion> obtenerTodasLasReservaciones() {
         ArrayList<Reservacion> todasLasReservaciones = new ArrayList<>();
         for (Reservacion r : mapaReservacionesPorId.values()) {
