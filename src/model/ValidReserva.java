@@ -1,24 +1,35 @@
 package model;
 
 public class ValidReserva {
-    public static void validarHorario(int horaInicial, int horaFinal) throws HorarioException{
-        if(horaInicial < 7 || horaInicial > 16){
-            throw new HorarioException("La hora inicial debe estra entre 7am y 16pm (4pm)");
+
+    public static void validarHorario(DiaSemana dia, int horaInicio, int horaFin) throws HorarioException {
+        if (dia == null) {
+            throw new HorarioException("El dia no puede estar vacio.");
         }
-        if(horaFinal < 8 || horaFinal > 17){
-            throw new HorarioException("La hora final debe estar entre 8am y 17pm (5pm)");
+
+        validarHorario(horaInicio, horaFin);
+    }
+
+    public static void validarHorario(int horaInicio, int horaFin) throws HorarioException {
+        if (horaInicio < 7 || horaInicio > 16) {
+            throw new HorarioException("La hora de inicio debe estar entre 7:00 AM y 4:00 PM.");
         }
-        if(horaFinal <= horaInicial){
+
+        if (horaFin < 8 || horaFin > 17) {
+            throw new HorarioException("La hora final debe estar entre 8:00 AM y 5:00 PM.");
+        }
+
+        if (horaFin <= horaInicio) {
             throw new HorarioException("La hora final debe ser mayor que la hora de inicio.");
         }
-        int tiempo = horaFinal - horaInicial;
 
-        if(tiempo < 1){
-            throw new HorarioException("Debes reservar un minimo de 1 hora");
+        int duracion = horaFin - horaInicio;
+
+        if (duracion < 1) {
+            throw new HorarioException("La reservacion debe durar un minimo de 1 hora.");
         }
-
-        if(tiempo > 8){
-            throw new HorarioException("El maximo que puede durar una reservacion es 8 horas.");
+        if (duracion > 8) {
+            throw new HorarioException("La reservacion no puede durar mas de 8 horas consecutivas.");
         }
     }
 }

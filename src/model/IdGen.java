@@ -1,39 +1,51 @@
 package model;
 
+import java.util.HashSet;
+import java.util.Random;
+
 public class IdGen {
 
-    private static int contadorT = 1;
+    private static Random random = new Random();
 
-    public static String generarIdIndividual(
-            int mes,
-            int dia,
-            int year,
-            int numeroEspacio,
-            int horaInicio
-    ) {
-        int yearCorto = year % 100;
+    private static HashSet<String> idsReservaciones = new HashSet<>();
+    private static HashSet<String> idsGrupos = new HashSet<>();
+    private static HashSet<String> idsTransacciones = new HashSet<>();
 
-        return String.format(
-                "%02d%02d%02d%03d%02d",
-                mes,
-                dia,
-                yearCorto,
-                numeroEspacio,
-                horaInicio
-        );
+    public static String nuevoIdReservacion() {
+        String id;
+
+        do {
+            id = "Reserva-" + generarNumeroRandom();
+        } while (idsReservaciones.contains(id));
+
+        idsReservaciones.add(id);
+        return id;
     }
 
-    public static String generarIdGrupo(
-            int mes,
-            int dia,
-            int year,
-            int numeroEspacio,
-            int horaInicio
-    ) {
-        return "G-" + generarIdIndividual(mes, dia, year, numeroEspacio, horaInicio);
+    public static String nuevoIdGrupo() {
+        String id;
+
+        do {
+            id = "Grupo:" + generarNumeroRandom();
+        } while (idsGrupos.contains(id));
+
+        idsGrupos.add(id);
+        return id;
     }
 
     public static String nuevoIdTransaccion() {
-        return String.format("T-%05d", contadorT++);
+        String id;
+
+        do {
+            id = "Transaccion:" + generarNumeroRandom();
+        } while (idsTransacciones.contains(id));
+
+        idsTransacciones.add(id);
+        return id;
+    }
+
+    private static String generarNumeroRandom() {
+        int numero = random.nextInt(900000) + 100000;
+        return String.valueOf(numero);
     }
 }

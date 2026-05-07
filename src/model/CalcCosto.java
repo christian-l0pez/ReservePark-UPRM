@@ -13,7 +13,7 @@ public class CalcCosto {
     public static final double COSTO_FLUIDOS = 2.00;
     public static final double COSTO_LAVADO_EXTERIOR = 50.00;
     public static final double COSTO_LIQUIDO_FRENOS = 35.00;
-    public static final double COSTO_ACEITE_MOTOR = 40.00;
+    public static final double COSTO_ACEITE_MOTOR = 35.00;
 
     public static double obtenerTarifaPorHora(TipoSeccion seccion) {
         if (seccion == TipoSeccion.GENERAL) {

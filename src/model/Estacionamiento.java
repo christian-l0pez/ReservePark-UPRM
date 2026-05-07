@@ -103,15 +103,15 @@ public class Estacionamiento {
             int horaFin
     ) throws HorarioException {
         ValidReserva.validarHorario(dia, horaInicio, horaFin);
-        Set<Espacio> espaciosQueEsanDisponibles = new HashSet<>();
+        Set<Espacio> espaciosQueEstanDisponibles = new HashSet<>();
         ArrayList<Espacio> todosLosEspaciosDeLaSeccion = conseguirListaDeEspaciosPorSeccion(seccion);
         for (Espacio espacioActual : todosLosEspaciosDeLaSeccion) {
             boolean estaLibre = espacioActual.estaDisponible(dia, horaInicio, horaFin);
             if (estaLibre == true) {
-                espaciosQueEsanDisponibles.add(espacioActual);
+                espaciosQueEstanDisponibles.add(espacioActual);
             }
         }
-        return espaciosQueEsanDisponibles;
+        return espaciosQueEstanDisponibles;
     }
 
     public Reservacion crearReservacion(
@@ -145,13 +145,7 @@ public class Estacionamiento {
                 horaFin,
                 servicios
         );
-        String idDeEstaReservacion = IdGen.generarIdIndividual(
-                mes,
-                diaMes,
-                year,
-                numeroEspacio,
-                horaInicio
-        );
+        String idDeEstaReservacion = IdGen.nuevoIdReservacion();
         Reservacion nuevaReservacion = new Reservacion(
                 idDeEstaReservacion,
                 "",
@@ -206,13 +200,7 @@ public class Estacionamiento {
                 DiaSemana.JUEVES,
                 DiaSemana.VIERNES
         };
-        String idDeGrupo = IdGen.generarIdGrupo(
-                mes,
-                diaInicioMes,
-                year,
-                numeroEspacio,
-                horaInicio
-        );
+    String idDeGrupo = IdGen.nuevoIdGrupo();
 
     Espacio espacioElegido = buscarEspacioPorNumero(numeroEspacio);
         if (espacioElegido == null) {
@@ -232,20 +220,14 @@ public class Estacionamiento {
         }
 
         for (int i = 0; i < diasDeLaSemana.length; i++) {
-            int diaCalendarioActual = diaInicioMes + i;
+            // int diaCalendarioActual = diaInicioMes + i;
             double costoDeEsteDia = CalcCosto.calcularCostoTotal(
                     seccion,
                     horaInicio,
                     horaFin,
                     servicios
             );
-            String idDeEstaReservacion = IdGen.generarIdIndividual(
-                    mes,
-                    diaCalendarioActual,
-                    year,
-                    numeroEspacio,
-                    horaInicio
-            );
+            String idDeEstaReservacion = IdGen.nuevoIdReservacion();
             Reservacion reservacionDeEsteDia = new Reservacion(
                     idDeEstaReservacion,
                     idDeGrupo,
