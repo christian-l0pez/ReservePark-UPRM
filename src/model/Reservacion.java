@@ -1,7 +1,8 @@
 package model;
 import java.util.ArrayList;
-
+// Clase que representa una reservacion de estacionamiento
 public class Reservacion {
+    // Guarda la informacion principal de la reservacion
     private String idReservacion;
     private String idGrupo;
     private Estudiante estudiante;
@@ -13,7 +14,7 @@ public class Reservacion {
     private ArrayList<ServicioAdicional> servicios;
     private double costoTotal;
     private boolean activo;
-
+    // Crea una reservacion con toda la informacion necesaria
     public Reservacion(
             String idReservacion,
             String idGrupo,
@@ -39,74 +40,74 @@ public class Reservacion {
         this.activo=true;
     }
 
-    public String getIdReservacion() {
+    public String getIdReservacion() {   // Devuelve el id de la reservacion
         return idReservacion;
     }
 
-    public String getIdGrupo() {
+    public String getIdGrupo() {// Devuelve el id del grupo 
         return idGrupo;
     }
 
-    public Estudiante getEstudiante() {
+    public Estudiante getEstudiante() { // Devuelve el estudiante
         return estudiante;
     }
 
-    public Auto getAuto() {
+    public Auto getAuto() {  // Devuelve el auto
         return auto;
     }
 
-    public Espacio getEspacio() {
+    public Espacio getEspacio() { // Devuelve el espacio
         return espacio;
     }
 
-    public DiaSemana getDia() {
+    public DiaSemana getDia() {// Devuelve el dia
         return dia;
     }
 
-    public int getHoraInicio() {
+    public int getHoraInicio() {// Devuelve la hora de inicio
         return horaInicio;
     }
 
-    public int getHoraFin() {
+    public int getHoraFin() {// Devuelve la hora final
         return horaFin;
     }
 
-    public ArrayList<ServicioAdicional> getServicios() {
+    public ArrayList<ServicioAdicional> getServicios() {// Devuelve los servicios adicionales
         return servicios;
     }
 
-    public double getCostoTotal() {
+    public double getCostoTotal() {// Devuelve el costo total
         return costoTotal;
     }
 
-    public boolean isActivo() {
+    public boolean isActivo() {// Devuelve si la reservacion esta activa
         return activo;
     }
 
-    public int getDuracion() {
+    public int getDuracion() {// Devuelve la duracion de la reservacion
         return horaFin - horaInicio;
     }
 
-    public boolean esMayorDeDosHoras() {
+    public boolean esMayorDeDosHoras() { // Verifica si la reservacion dura mas de dos horas
         return getDuracion() > 2;
     }
 
-    public void cancelar() {
+    public void cancelar() { // Cancela la reservacion
         this.activo = false;
     }
 
-    public void reactivar() {
+    public void reactivar() {// Reactiva la reservacion
         this.activo = true;
     }
 
-    public void cambiarEspacio(Espacio nuevoEspacio) {
+    public void cambiarEspacio(Espacio nuevoEspacio) {// Cambia el espacio de la reservacion
         this.espacio = nuevoEspacio;
     }
 
-    public void actualizarCostoTotal(double nuevoCostoTotal) {
+    public void actualizarCostoTotal(double nuevoCostoTotal) {// Actualiza el costo total
         this.costoTotal = nuevoCostoTotal;
     }
-
+    // Devuelve la informacion de la reservacion
     @Override
     public String toString() {
         String estado;
