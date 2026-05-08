@@ -256,7 +256,7 @@ public class MenuOp {
         TipoSeccion seccion = seccion();
         DiaSemana dia = dia();
 
-        System.out.print("Hora de inicio (7am - 16pm (4pm): ");
+        System.out.print("Hora de inicio (7 - 16 (4pm): ");
         int horaInicial = scanner.nextInt(); scanner.nextLine();
 
         System.out.print("Hora de finalizacion: (8am - 17pm (5pm): ");
